@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rakशक — Patient</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    .severity-wrap{margin:8px 0;}
+    .severity-track{display:flex;gap:6px;margin-top:6px;}
+    .sev-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;text-align:center;font-size:0.78rem;font-weight:600;font-family:'Poppins',sans-serif;background:#fff;transition:all 0.2s;}
+    .sev-btn.s0{border-color:#ccc;} .sev-btn.s0.active{background:#eee;border-color:#999;color:#333;}
+    .sev-btn.s1{border-color:#4caf50;} .sev-btn.s1.active{background:#e8f5e9;border-color:#4caf50;color:#2e7d32;}
+    .sev-btn.s2{border-color:#8bc34a;} .sev-btn.s2.active{background:#f1f8e9;border-color:#8bc34a;color:#558b2f;}
+    .sev-btn.s3{border-color:#ffc107;} .sev-btn.s3.active{background:#fff8e1;border-color:#ffc107;color:#f57f17;}
+    .sev-btn.s4{border-color:#ff9800;} .sev-btn.s4.active{background:#fff3e0;border-color:#ff9800;color:#e65100;}
+    .sev-btn.s5{border-color:#f44336;} .sev-btn.s5.active{background:#ffebee;border-color:#f44336;color:#c62828;}
+    .bill-box{background:linear-gradient(135deg,#1a1a2e,#2d2d4e);border-radius:12px;padding:16px;color:white;margin-top:10px;}
+    .bill-row{display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:6px;}
+    .bill-total{display:flex;justify-content:space-between;font-size:1rem;font-weight:700;border-top:1px solid rgba(255,255,255,0.2);padding-top:8px;margin-top:4px;color:#f0e68c;}
+    .driver-map-wrap{position:relative;}
+    .driver-info-overlay{position:absolute;bottom:10px;left:10px;right:10px;background:white;border-radius:10px;padding:12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:1000;display:flex;align-items:center;gap:12px;}
+    .driver-avatar{width:44px;height:44px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:20px;flex-shrink:0;}
+    .otp-section{background:#e3f2fd;border-radius:10px;padding:14px;margin-bottom:14px;border:1px solid #90caf9;}
+    .otp-verified{background:#e8f5e9;border-color:#a5d6a7;color:#2e7d32;}
+    .stars{display:flex;gap:4px;margin:8px 0;}
+    .star{font-size:2rem;cursor:pointer;color:#ddd;transition:color 0.1s;}
+    .star.active,.star:hover{color:#ffc107;}
+    .cancel-btn{background:#fff;color:var(--red);border:1.5px solid var(--red);border-radius:30px;padding:7px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s;}
+    .cancel-btn:hover{background:var(--red);color:white;}
+    #live-map{height:280px;border-radius:12px;border:1.5px solid var(--border);margin-bottom:8px;}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="brand">
+    <img src="rakshak-logo. copy.png" alt="Rakशक" style="height:38px;object-fit:contain"/>
+  </div>
+  <div class="nav-right">
+    <div class="nav-user"><div class="avatar" id="user-avatar">P</div><span id="user-name">Patient</span></div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div id="alert" class="alert" style="display:none"></div>
+
+  <!-- OTP Verification Banner -->
+  <div id="otp-banner" class="otp-section" style="display:none">
+    <div style="font-weight:600;margin-bottom:8px">📱 Verify your phone number first</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input type="tel" id="otp-phone" placeholder="10-digit mobile number" maxlength="10" style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"/>
+      <button class="btn btn-info btn-sm" onclick="sendOTP()">Send OTP</button>
+    </div>
+    <div id="otp-input-wrap" style="display:none;margin-top:8px;display:none">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" maxlength="6" style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"/>
+        <button class="btn btn-success btn-sm" onclick="verifyOTP()">Verify</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- LEFT: Form -->
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="header-icon">🆘</div> Request Emergency Ambulance</div>
+
+        <!-- Basic Info -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Patient Name *</label>
+            <input type="text" id="pat-name" placeholder="Full name"/>
+          </div>
+          <div class="form-group">
+            <label>Age *</label>
+            <input type="number" id="pat-age" placeholder="Age" min="1" max="120"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Gender *</label>
+            <select id="pat-gender">
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ambulance Type</label>
+            <select id="amb-type" onchange="updateBilling()">
+              <option value="BLS">BLS — Basic Life Support (₹300 base)</option>
+              <option value="ALS">ALS — Advanced Life Support (₹500 base)</option>
+              <option value="PTA">PTA — Patient Transport (₹200 base)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Disease -->
+        <div class="form-group">
+          <label>Medical Condition Category *</label>
+          <select id="condition-cat" onchange="handleCategoryChange()">
+            <option value="">Select condition...</option>
+            <option value="Cardiac">❤️ Cardiac / Heart Attack</option>
+            <option value="Trauma">🚗 Accident / Trauma</option>
+            <option value="Respiratory">😮‍💨 Breathing Difficulty</option>
+            <option value="Neurological">🧠 Stroke / Neurological</option>
+            <option value="Fracture">🦴 Fracture / Bone Injury</option>
+            <option value="Burns">🔥 Burns</option>
+            <option value="Fever">🌡️ High Fever</option>
+            <option value="Pregnancy">🤰 Pregnancy Emergency</option>
+            <option value="Poisoning">☠️ Poisoning / Overdose</option>
+            <option value="Other">📝 Other (specify below)</option>
+          </select>
+        </div>
+        <div class="form-group" id="other-condition-wrap" style="display:none">
+          <label>Describe Condition *</label>
+          <input type="text" id="other-condition" placeholder="e.g. severe headache, chest pain..."/>
+        </div>
+        <div class="form-group">
+          <label>Additional Description</label>
+          <textarea id="description" rows="2" placeholder="Any extra details..."></textarea>
+        </div>
+
+        <!-- Severity Scale -->
+        <div class="severity-wrap">
+          <label style="font-size:0.82rem;font-weight:500;color:var(--text-mid)">Severity Scale * &nbsp;<span style="color:var(--muted);font-weight:400">(0 = No Pain, 5 = Extreme)</span></label>
+          <div class="severity-track">
+            <button class="sev-btn s0 active" onclick="setSeverity(0,this)">0<br/><span style="font-size:0.65rem">None</span></button>
+            <button class="sev-btn s1" onclick="setSeverity(1,this)">1<br/><span style="font-size:0.65rem">Mild</span></button>
+            <button class="sev-btn s2" onclick="setSeverity(2,this)">2<br/><span style="font-size:0.65rem">Mild+</span></button>
+            <button class="sev-btn s3" onclick="setSeverity(3,this)">3<br/><span style="font-size:0.65rem">Moderate</span></button>
+            <button class="sev-btn s4" onclick="setSeverity(4,this)">4<br/><span style="font-size:0.65rem">Severe</span></button>
+            <button class="sev-btn s5" onclick="setSeverity(5,this)">5<br/><span style="font-size:0.65rem">Extreme</span></button>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group" style="margin-top:14px">
+          <label>📍 Your Location *</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="address" placeholder="Click map or use Auto" readonly style="flex:1"/>
+            <button class="btn btn-info btn-sm" onclick="getMyLocation()">📍 Auto</button>
+          </div>
+        </div>
+        <div id="map" style="height:240px;border-radius:12px;border:1.5px solid var(--border);margin-bottom:14px"></div>
+        <input type="hidden" id="lat"/><input type="hidden" id="lon"/>
+
+        <!-- Billing estimate -->
+        <div class="bill-box">
+          <div style="font-size:0.82rem;opacity:0.7;margin-bottom:8px">💰 Estimated Fare</div>
+          <div class="bill-row"><span>Ambulance Type</span><span id="bill-type">BLS</span></div>
+          <div class="bill-row"><span>Base Charge</span><span id="bill-base">₹300</span></div>
+          <div class="bill-row"><span>Per KM Rate</span><span id="bill-per-km">₹20/km</span></div>
+          <div class="bill-row"><span>Estimated Distance</span><span id="bill-dist">~5 km</span></div>
+          <div class="bill-total"><span>Estimated Total</span><span id="bill-total">₹400</span></div>
+          <div style="font-size:0.72rem;opacity:0.6;margin-top:6px">*Final amount may vary based on actual distance</div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;padding:14px;font-size:1rem" onclick="submitEmergency()" id="submit-btn">
+          🆘 SEND SOS — REQUEST AMBULANCE
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: My Requests + Live Map -->
+    <div>
+      <!-- Live Tracking Map -->
+      <div class="card" id="live-map-card" style="display:none">
+        <div class="card-header"><div class="header-icon">🗺</div> Live Tracking</div>
+        <div id="live-map"></div>
+        <div id="driver-info-bar" style="display:none" class="driver-info-overlay">
+          <div class="driver-avatar">🚑</div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem" id="live-driver-name">Driver</div>
+            <div style="font-size:0.78rem;color:var(--text-muted)" id="live-driver-vehicle">Vehicle</div>
+            <div style="font-size:0.78rem;color:var(--success);font-weight:600" id="live-driver-eta">On the way...</div>
+          </div>
+          <a id="call-driver-btn" href="#" style="margin-left:auto;background:var(--success);color:white;padding:8px 14px;border-radius:20px;font-size:0.78rem;font-weight:700">📞 Call</a>
+        </div>
+      </div>
+
+      <!-- My Requests -->
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon">📋</div> My Requests
+          <button class="btn btn-ghost btn-sm" onclick="loadMyEmergencies()" style="margin-left:auto">↻</button>
+        </div>
+        <div id="my-emergencies"><div class="empty-state"><div class="empty-icon">🏥</div><p>No requests yet</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="feedback-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header"><h3>⭐ Rate Your Experience</h3></div>
+    <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:16px">How was your ambulance service?</p>
+    <div class="stars" id="star-rating">
+      <span class="star" onclick="setRating(1)">★</span>
+      <span class="star" onclick="setRating(2)">★</span>
+      <span class="star" onclick="setRating(3)">★</span>
+      <span class="star" onclick="setRating(4)">★</span>
+      <span class="star" onclick="setRating(5)">★</span>
+    </div>
+    <div class="form-group">
+      <label>Comments (optional)</label>
+      <textarea id="feedback-comment" rows="3" placeholder="Share your experience..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="submitFeedback()" style="flex:1;justify-content:center">Submit Feedback</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('feedback-modal').style.display='none'" style="flex:0.4;justify-content:center">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL MODAL -->
+<div id="cancel-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header"><h3>❌ Cancel Request</h3></div>
+    <div class="form-group">
+      <label>Reason for cancellation</label>
+      <select id="cancel-reason">
+        <option value="No longer needed">No longer needed</option>
+        <option value="Found another ambulance">Found another ambulance</option>
+        <option value="Booked by mistake">Booked by mistake</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="background:#c62828;flex:1;justify-content:center" onclick="confirmCancel()">Cancel Request</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('cancel-modal').style.display='none'" style="flex:0.4;justify-content:center">Back</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+if (!requireAuth('patient')) {}
+const user = getUser();
+document.getElementById('user-name').textContent = user.name;
+document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+document.getElementById('pat-name').value = user.name;
+
+// Check OTP verification
+if (!user.isPhoneVerified) document.getElementById('otp-banner').style.display = 'block';
+
+// Map
+const map = L.map('map').setView([22.7196, 75.8577], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
+let marker;
+map.on('click', e => {
+  const {lat, lng} = e.latlng;
+  setLocation(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+});
+
+// Live tracking map
+let liveMap, driverMarker, patientMarker, liveRouteLine;
+function initLiveMap() {
+  if (liveMap) return;
+  setTimeout(() => {
+    liveMap = L.map('live-map').setView([22.7196, 75.8577], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(liveMap);
+  }, 300);
+}
+
+function setLocation(lat, lng, addr) {
+  document.getElementById('lat').value = lat;
+  document.getElementById('lon').value = lng;
+  document.getElementById('address').value = addr;
+  if (marker) map.removeLayer(marker);
+  marker = L.marker([lat, lng]).addTo(map).bindPopup('📍 Your location').openPopup();
+  updateBilling();
+}
+
+function getMyLocation() {
+  if (!navigator.geolocation) return showAlert('alert','Geolocation not supported','error');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const {latitude:lat, longitude:lng} = pos.coords;
+    map.setView([lat, lng], 15);
+    setLocation(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+  }, () => showAlert('alert','Could not get location','error'));
+}
+
+// Severity
+let selectedSeverity = 0;
+function setSeverity(val, el) {
+  selectedSeverity = val;
+  document.querySelectorAll('.sev-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Disease dropdown
+function handleCategoryChange() {
+  const val = document.getElementById('condition-cat').value;
+  document.getElementById('other-condition-wrap').style.display = val === 'Other' ? 'block' : 'none';
+}
+
+// Billing
+const BILLING = { ALS:{base:500,perKm:30}, BLS:{base:300,perKm:20}, PTA:{base:200,perKm:15} };
+function updateBilling() {
+  const type = document.getElementById('amb-type').value;
+  const b = BILLING[type];
+  const dist = 5; // default estimate
+  document.getElementById('bill-type').textContent = type;
+  document.getElementById('bill-base').textContent = `₹${b.base}`;
+  document.getElementById('bill-per-km').textContent = `₹${b.perKm}/km`;
+  document.getElementById('bill-dist').textContent = `~${dist} km`;
+  document.getElementById('bill-total').textContent = `₹${b.base + (b.perKm * dist)}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// PATIENT.HTML mein SCRIPT section ke andar yeh functions
+// dhundo aur REPLACE karo (Ctrl+H in VS Code):
+// ═══════════════════════════════════════════════════════
+
+// ── OTP Functions ── (REPLACE these in patient.html)
+
+async function sendOTP() {
+  const phone = document.getElementById('otp-phone').value.trim();
+  if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
+    return showAlert('alert', 'Enter valid 10-digit mobile number', 'error');
+  }
+  const btn = document.getElementById('send-otp-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rakshak_token')
+      },
+      body: JSON.stringify({ phone })
+    });
+    const data = await res.json();
+    console.log('send-otp response:', data);
+
+    btn.textContent = 'Resend OTP';
+    btn.disabled = false;
+
+    if (!data.success) {
+      return showAlert('alert', data.message, 'error');
+    }
+
+    document.getElementById('otp-input-row').style.display = 'block';
+    showAlert('alert', data.message || 'OTP sent!', 'success');
+
+    if (data.devOtp) {
+      document.getElementById('dev-otp-hint').textContent = '👆 Your OTP: ' + data.devOtp;
+      document.getElementById('dev-otp-hint').style.color = '#e8001c';
+      document.getElementById('dev-otp-hint').style.fontWeight = '700';
+      document.getElementById('dev-otp-hint').style.fontSize = '1rem';
+    }
+  } catch (err) {
+    btn.textContent = 'Resend OTP';
+    btn.disabled = false;
+    showAlert('alert', 'Network error: ' + err.message, 'error');
+  }
+}
+
+async function verifyOTP() {
+  const otp = document.getElementById('otp-input').value.trim();
+  if (!otp || otp.length !== 6) {
+    return showAlert('alert', 'Enter 6-digit OTP', 'error');
+  }
+
+  try {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('rakshak_token')
+      },
+      body: JSON.stringify({ otp })
+    });
+    const data = await res.json();
+    console.log('verify-otp response:', data);
+
+    if (!data.success) {
+      return showAlert('alert', data.message, 'error');
+    }
+
+    showAlert('alert', '✅ Phone verified!', 'success');
+    document.getElementById('otp-banner').style.display = 'none';
+    document.getElementById('verify-status').className = 'verify-badge verified';
+    document.getElementById('verify-status').textContent = '✅ Phone Verified';
+    const u = getUser();
+    u.phoneVerified = true;
+    localStorage.setItem('rakshak_user', JSON.stringify(u));
+  } catch (err) {
+    showAlert('alert', 'Network error: ' + err.message, 'error');
+  }
+}
+
+// ── Check Verification on page load ──
+async function checkVerification() {
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('rakshak_token') }
+    });
+    const data = await res.json();
+    if (data.success && !data.user.phoneVerified) {
+      document.getElementById('otp-banner').style.display = 'block';
+    } else if (data.success && data.user.phoneVerified) {
+      document.getElementById('verify-status').className = 'verify-badge verified';
+      document.getElementById('verify-status').textContent = '✅ Phone Verified';
+    }
+  } catch(e) {
+    console.error('checkVerification error:', e);
+  }
+}
+// Submit Emergency
+async function submitEmergency() {
+  const patName   = document.getElementById('pat-name').value.trim();
+  const patAge    = document.getElementById('pat-age').value;
+  const patGender = document.getElementById('pat-gender').value;
+  const cat       = document.getElementById('condition-cat').value;
+  const otherCond = document.getElementById('other-condition').value.trim();
+  const condition = cat === 'Other' ? otherCond : cat;
+  const description = document.getElementById('description').value.trim();
+  const lat       = document.getElementById('lat').value;
+  const lon       = document.getElementById('lon').value;
+  const address   = document.getElementById('address').value;
+  const ambType   = document.getElementById('amb-type').value;
+
+  if (!patName) return showAlert('alert','Please enter patient name','error');
+  if (!patAge)  return showAlert('alert','Please enter patient age','error');
+  if (!patGender) return showAlert('alert','Please select gender','error');
+  if (!cat)     return showAlert('alert','Please select medical condition','error');
+  if (cat === 'Other' && !otherCond) return showAlert('alert','Please describe the condition','error');
+  if (!lat || !lon) return showAlert('alert','Please select your location on map or click Auto','error');
+
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="spinner"></span> Processing...';
+  btn.disabled = true;
+
+  const data = await apiCall('POST','/emergency/request',{
+    patientAge: patAge, patientGender: patGender,
+    condition, conditionCategory: cat, description,
+    severityScale: selectedSeverity, lat, lon, address, ambulanceType: ambType
+  });
+
+  btn.innerHTML = '🆘 SEND SOS — REQUEST AMBULANCE';
+  btn.disabled = false;
+
+  if (!data.success) return showAlert('alert',data.message,'error');
+  showAlert('alert','✅ Emergency submitted! Help is on the way.','success');
+
+  // Show billing
+  const e = data.emergency;
+  const b = BILLING[ambType];
+  document.getElementById('bill-total').textContent = `₹${e.totalAmount || (b.base + b.perKm*5)}`;
+
+  loadMyEmergencies();
+}
+
+// Load my emergencies
+async function loadMyEmergencies() {
+  const data = await apiCall('GET','/emergency/my');
+  if (!data.success) return;
+  const container = document.getElementById('my-emergencies');
+  if (!data.emergencies.length) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏥</div><p>No requests yet</p></div>'; return; }
+
+  container.innerHTML = data.emergencies.map(e => `
+    <div class="emergency-item ${(e.priorityLevel||'').toLowerCase()}">
+      <div class="e-header">
+        <div>
+          <div class="e-name">${e.patientName} &nbsp;<span style="font-size:0.78rem;color:var(--text-muted)">${e.patientAge ? e.patientAge+'y' : ''} ${e.patientGender||''}</span></div>
+          <div class="e-condition">🩺 ${e.conditionCategory||''} ${e.condition !== e.conditionCategory ? '— '+e.condition : ''} &nbsp; Severity: ${'⬛'.repeat(e.severityScale||0)}${'⬜'.repeat(5-(e.severityScale||0))}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="${getStatusClass(e.status)}">${e.status}</span>
+        </div>
+      </div>
+      <div class="status-timeline">
+        ${['PENDING','ASSIGNED','ACCEPTED','COMPLETED'].map((s,i)=>{
+          const steps=['PENDING','ASSIGNED','ACCEPTED','COMPLETED'];
+          const idx=steps.indexOf(e.status);
+          const cls=i<idx?'done':i===idx?'current':'';
+          return `<div class="timeline-step"><div class="timeline-dot ${cls}">${['📋','🚑','✅','🏁'][i]}</div><div class="timeline-label">${s}</div></div>`;
+        }).join('')}
+      </div>
+      ${e.assignedHospital ? `<div style="font-size:0.82rem;padding:7px 10px;background:var(--light-gray);border-radius:8px;margin-top:6px">🏥 <b>${e.assignedHospital.name}</b></div>` : ''}
+      ${e.assignedDriver ? `
+        <div style="font-size:0.82rem;padding:7px 10px;background:var(--light-gray);border-radius:8px;margin-top:4px;display:flex;justify-content:space-between;align-items:center">
+          <span>🚑 <b>${e.assignedDriver.name}</b> — ${e.assignedDriver.vehicleNumber}</span>
+          <a href="tel:${e.assignedDriver.phone}" style="background:var(--success);color:white;padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:700">📞 Call</a>
+        </div>` : ''}
+      <!-- Billing -->
+      ${e.totalAmount ? `
+        <div style="background:#f8f9fa;border-radius:8px;padding:8px 12px;margin-top:6px;font-size:0.8rem">
+          💰 Fare: ₹${e.baseCharge} base + ₹${e.perKmCharge}/km × ${e.distanceKm}km = <b style="color:var(--red)">₹${e.totalAmount.toFixed(0)}</b>
+        </div>` : ''}
+      <div class="e-meta" style="margin-top:8px"><span>⏱ ${timeAgo(e.createdAt)}</span><span>🚑 ${e.ambulanceType}</span></div>
+      <div class="e-actions">
+        ${['PENDING','ASSIGNED'].includes(e.status) ? `<button class="cancel-btn" onclick="openCancelModal('${e._id}')">❌ Cancel</button>` : ''}
+        ${e.status==='ASSIGNED'||e.status==='ACCEPTED' ? `<button class="btn btn-info btn-sm" onclick="showLiveTracking('${e._id}')">🗺 Live Track</button>` : ''}
+        ${e.status==='COMPLETED' && !e.feedback?.rating ? `<button class="btn btn-warning btn-sm" onclick="openFeedback('${e._id}')">⭐ Rate</button>` : ''}
+        ${e.feedback?.rating ? `<span style="color:#ffc107;font-size:0.82rem">⭐ ${e.feedback.rating}/5 — Feedback given</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// Cancel
+let cancelTargetId = null;
+function openCancelModal(id) { cancelTargetId = id; document.getElementById('cancel-modal').style.display = 'flex'; }
+async function confirmCancel() {
+  const reason = document.getElementById('cancel-reason').value;
+  const data = await apiCall('PUT',`/emergency/cancel/${cancelTargetId}`,{reason});
+  document.getElementById('cancel-modal').style.display = 'none';
+  if (!data.success) return showAlert('alert',data.message,'error');
+  showAlert('alert','Request cancelled.','info');
+  loadMyEmergencies();
+}
+
+// Feedback
+let feedbackEmergencyId = null, selectedRating = 0;
+function openFeedback(id) { feedbackEmergencyId = id; document.getElementById('feedback-modal').style.display = 'flex'; }
+function setRating(r) {
+  selectedRating = r;
+  document.querySelectorAll('.star').forEach((s,i) => s.classList.toggle('active', i < r));
+}
+async function submitFeedback() {
+  if (!selectedRating) return showAlert('alert','Please select a rating','error');
+  const comment = document.getElementById('feedback-comment').value;
+  const data = await apiCall('POST',`/emergency/feedback/${feedbackEmergencyId}`,{rating:selectedRating,comment});
+  document.getElementById('feedback-modal').style.display = 'none';
+  if (!data.success) return showAlert('alert',data.message,'error');
+  showAlert('alert','✅ Thank you for your feedback!','success');
+  loadMyEmergencies();
+}
+
+// Live Tracking
+async function showLiveTracking(id) {
+  document.getElementById('live-map-card').style.display = 'block';
+  initLiveMap();
+  const data = await apiCall('GET',`/emergency/${id}`);
+  if (!data.success) return;
+  const e = data.emergency;
+  setTimeout(() => {
+    if (e.location) {
+      if (patientMarker) liveMap.removeLayer(patientMarker);
+      patientMarker = L.marker([e.location.lat, e.location.lon], {
+        icon: L.divIcon({className:'',html:'<div style="background:#e8001c;color:#fff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600">🧑 You</div>',iconAnchor:[30,10]})
+      }).addTo(liveMap);
+    }
+    if (e.assignedDriver?.currentLocation?.lat) {
+      if (driverMarker) liveMap.removeLayer(driverMarker);
+      driverMarker = L.marker([e.assignedDriver.currentLocation.lat, e.assignedDriver.currentLocation.lon], {
+        icon: L.divIcon({className:'',html:'<div style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600">🚑 Driver</div>',iconAnchor:[35,10]})
+      }).addTo(liveMap);
+      if (liveRouteLine) liveMap.removeLayer(liveRouteLine);
+      liveRouteLine = L.polyline([[e.location.lat,e.location.lon],[e.assignedDriver.currentLocation.lat,e.assignedDriver.currentLocation.lon]],{color:'#e8001c',weight:3,dashArray:'8,4'}).addTo(liveMap);
+      liveMap.fitBounds(liveRouteLine.getBounds(), {padding:[30,30]});
+      document.getElementById('driver-info-bar').style.display = 'flex';
+      document.getElementById('live-driver-name').textContent = e.assignedDriver.name;
+      document.getElementById('live-driver-vehicle').textContent = `${e.assignedDriver.vehicleType} — ${e.assignedDriver.vehicleNumber}`;
+      document.getElementById('call-driver-btn').href = `tel:${e.assignedDriver.phone}`;
+    }
+  }, 500);
+  document.getElementById('live-map-card').scrollIntoView({behavior:'smooth'});
+}
+
+// Socket.io
+const socket = io();
+socket.emit('join_room', `patient_${user.id}`);
+socket.on('status_update', data => {
+  showAlert('alert', `🔔 Status updated: ${data.status}`, 'info');
+  loadMyEmergencies();
+  if (data.showFeedback && data.emergencyId) openFeedback(data.emergencyId);
+});
+socket.on('driver_location', data => {
+  if (!liveMap) return;
+  if (driverMarker) liveMap.removeLayer(driverMarker);
+  driverMarker = L.marker([data.lat, data.lon], {
+    icon: L.divIcon({className:'',html:'<div style="background:#2e7d32;color:#fff;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600">🚑 Driver</div>',iconAnchor:[35,10]})
+  }).addTo(liveMap);
+  document.getElementById('live-driver-eta').textContent = 'Moving towards you...';
+});
+
+loadMyEmergencies();
+updateBilling();
+</script>
+</body>
+</html>

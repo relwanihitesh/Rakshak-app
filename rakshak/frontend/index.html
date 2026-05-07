@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rakshak — Emergency Medical Response</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="auth-page">
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="auth-left-logo">
+        <img src="rakshak-logo..png" alt="logo">
+      </div>
+      <h1>RAKSHAK</h1>
+      <p>Smart Emergency Medical Response & Intelligent Ambulance Dispatch System</p>
+      <div class="auth-features">
+        <div class="auth-feature"><span class="feat-icon">🤖</span><span class="feat-text">AI-Powered Medical Priority Scoring</span></div>
+        <div class="auth-feature"><span class="feat-icon">📍</span><span class="feat-text">GPS-Based Nearest Hospital Detection</span></div>
+        <div class="auth-feature"><span class="feat-icon">🏥</span><span class="feat-text">Real-Time Bed Availability Tracking</span></div>
+        <div class="auth-feature"><span class="feat-icon">⚡</span><span class="feat-text">Instant Ambulance Dispatch</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+    <div class="auth-box">
+      <h2>Welcome Back 👋</h2>
+      <p class="auth-sub">Login to access your dashboard</p>
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+        <div class="auth-tab" onclick="switchTab('register')">Register</div>
+      </div>
+
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <!-- LOGIN -->
+      <div id="login-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Enter your password"/>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:4px" onclick="login()">
+          <span id="login-btn-text">Login →</span>
+        </button>
+        <div style="margin-top:16px;padding:12px;background:var(--light-gray);border-radius:10px;font-size:0.78rem;color:var(--text-muted)">
+          <b style="color:var(--text-mid)">Demo Accounts:</b><br>
+          🧑 patient@rakshak.com / patient123<br>
+          🚑 driver1@rakshak.com / driver123
+        </div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="register-form" style="display:none">
+        <div class="form-group">
+          <label>Register As</label>
+          <div class="role-select">
+            <div class="role-btn active" onclick="selectRole('patient',this)"><span>🧑</span>Patient</div>
+            <div class="role-btn" onclick="selectRole('driver',this)"><span>🚑</span>Driver</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="reg-name" placeholder="Your full name"/>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="reg-phone" placeholder="9876543210"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="reg-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="reg-password" placeholder="Minimum 6 characters"/>
+        </div>
+        <div class="form-group" id="vehicle-field" style="display:none">
+          <label>Vehicle Number</label>
+          <input type="text" id="reg-vehicle" placeholder="MP09AB1234"/>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center;margin-top:4px" onclick="register()">Create Account →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script>
+  let selectedRole = 'patient';
+  const u = getUser();
+  if (u && getToken()) redirectToRole(u.role);
+
+  function redirectToRole(role) {
+    if (role === 'admin') window.location.href = '/admin';
+    else if (role === 'driver') window.location.href = '/driver';
+    else window.location.href = '/patient';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', tab==='login'?i===0:i===1));
+    document.getElementById('login-form').style.display    = tab==='login' ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab==='register' ? 'block' : 'none';
+    document.getElementById('alert').style.display = 'none';
+    if(tab==='login') { document.querySelector('h2').textContent='Welcome Back 👋'; document.querySelector('.auth-sub').textContent='Login to access your dashboard'; }
+    else { document.querySelector('h2').textContent='Create Account'; document.querySelector('.auth-sub').textContent='Join Rakshak Emergency Network'; }
+  }
+
+  function selectRole(role, el) {
+    selectedRole = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('vehicle-field').style.display = role === 'driver' ? 'block' : 'none';
+  }
+
+  async function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return showAlert('alert','Please fill all fields','error');
+    document.getElementById('login-btn-text').innerHTML = '<span class="spinner"></span> Logging in...';
+    const data = await apiCall('POST', '/auth/login', { email, password });
+    document.getElementById('login-btn-text').textContent = 'Login →';
+    if (!data.success) return showAlert('alert', data.message, 'error');
+    setAuth(data.token, data.user);
+    redirectToRole(data.user.role);
+  }
+
+  async function register() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const phone = document.getElementById('reg-phone').value.trim();
+    const vehicleNumber = document.getElementById('reg-vehicle').value.trim();
+    if (!name || !email || !password) return showAlert('alert','Please fill required fields','error');
+    const data = await apiCall('POST', '/auth/register', { name, email, password, phone, role: selectedRole, vehicleNumber });
+    if (!data.success) return showAlert('alert', data.message, 'error');
+    setAuth(data.token, data.user);
+    redirectToRole(data.user.role);
+  }
+
+  document.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+      if (document.getElementById('login-form').style.display !== 'none') login();
+      else register();
+    }
+  });
+</script>
+</body>
+</html>

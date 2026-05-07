@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rakशक — 24/7 Emergency Ambulance Service in Indore</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--red:#e8001c;--pink:#e91e8c;--navy:#1a2340;--white:#fff;--off:#f8f9fa;--text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Poppins',sans-serif;color:var(--text);background:#fff;}
+    a{text-decoration:none;color:inherit;}
+
+    /* ── NAVBAR ── */
+    .navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:#fff;padding:0 6%;height:68px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+    .nav-logo img{height:46px;object-fit:contain;}
+    .nav-links{display:flex;align-items:center;gap:36px;}
+    .nav-links a{color:#333;font-size:0.9rem;font-weight:500;transition:color 0.2s;}
+    .nav-links a:hover{color:var(--red);}
+    .nav-cta{display:flex;gap:12px;align-items:center;}
+    .btn-book-nav{background:var(--red);color:#fff;padding:10px 26px;border-radius:4px;font-weight:700;font-size:0.88rem;border:none;cursor:pointer;font-family:'Poppins',sans-serif;letter-spacing:0.5px;transition:all 0.2s;}
+    .btn-book-nav:hover{background:#c0001a;}
+    .btn-login-nav{background:#fff;color:var(--red);padding:9px 26px;border-radius:4px;font-weight:700;font-size:0.88rem;border:2px solid var(--red);cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s;}
+    .btn-login-nav:hover{background:var(--red);color:#fff;}
+
+    /* ── HERO ── */
+    .hero{min-height:100vh;background:#fff;display:flex;align-items:center;padding:0 6%;padding-top:68px;}
+    .hero-left{flex:1;max-width:580px;}
+    .hero-tag{color:var(--red);font-size:0.95rem;font-weight:600;margin-bottom:14px;}
+    .hero h1{font-size:2.6rem;font-weight:800;color:#111;line-height:1.2;margin-bottom:16px;}
+    .hero p{font-size:0.95rem;color:var(--muted);margin-bottom:32px;line-height:1.7;}
+    .hero-btns{display:flex;flex-direction:column;gap:14px;max-width:420px;}
+    .btn-book-hero{background:var(--red);color:#fff;padding:16px;border-radius:6px;font-weight:700;font-size:1rem;border:none;cursor:pointer;font-family:'Poppins',sans-serif;text-align:center;transition:all 0.2s;letter-spacing:0.5px;}
+    .btn-book-hero:hover{background:#c0001a;transform:translateY(-1px);}
+    .hero-or{text-align:center;color:var(--muted);font-size:0.88rem;}
+    .hero-call-label{text-align:center;font-weight:600;font-size:0.9rem;color:#111;}
+    .btn-call-hero{background:#fff;color:var(--red);padding:14px;border-radius:6px;font-weight:700;font-size:1rem;border:2px solid var(--red);cursor:pointer;font-family:'Poppins',sans-serif;text-align:center;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-call-hero:hover{background:#fff5f5;}
+    .hero-right{flex:1;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:16px;}
+    .hero-right-tag{color:var(--red);font-size:1.1rem;font-weight:700;text-align:right;}
+    .hero-ambulance{width:100%;max-width:600px;border-radius:16px;overflow:hidden;}
+    .ambulance-illustration{background:linear-gradient(135deg,#e8f4f8,#d4eaf5);border-radius:16px;height:320px;display:flex;align-items:center;justify-content:center;font-size:8rem;position:relative;overflow:hidden;}
+    .ambulance-illustration::before{content:'🏙️';position:absolute;right:20px;bottom:10px;font-size:5rem;opacity:0.3;}
+
+    /* ── SERVICES SECTION ── */
+    .services{background:linear-gradient(135deg,#4facde,#e91e8c);padding:60px 6%;text-align:center;}
+    .services h2{color:#fff;font-size:1.5rem;font-weight:700;margin-bottom:14px;}
+    .services p{color:rgba(255,255,255,0.9);font-size:0.9rem;max-width:700px;margin:0 auto 36px;line-height:1.7;}
+    .services-cards{display:flex;gap:0;justify-content:center;flex-wrap:wrap;background:rgba(255,255,255,0.15);border-radius:12px;overflow:hidden;max-width:700px;margin:0 auto;}
+    .service-card{flex:1;min-width:150px;padding:24px 16px;text-align:center;cursor:pointer;border-right:1px solid rgba(255,255,255,0.2);transition:background 0.2s;}
+    .service-card:last-child{border-right:none;}
+    .service-card:hover{background:rgba(255,255,255,0.2);}
+    .service-card .s-icon{font-size:2.2rem;margin-bottom:10px;}
+    .service-card span{color:#fff;font-size:0.82rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;}
+    .service-card span::after{content:'→';font-size:0.9rem;}
+
+    /* ── STATS ── */
+    .stats{padding:60px 6%;background:#fff;}
+    .stats h2{text-align:center;font-size:1.6rem;font-weight:800;margin-bottom:40px;color:#111;}
+    .stats-row{display:flex;gap:40px;justify-content:center;flex-wrap:wrap;align-items:center;}
+    .stat-item{display:flex;align-items:center;gap:12px;}
+    .stat-icon-wrap{width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+    .stat-text .num{font-size:1.1rem;font-weight:700;color:#111;}
+    .stat-text .lbl{font-size:0.78rem;color:var(--muted);}
+
+    /* ── AMBULANCE TYPES ── */
+    .amb-types{padding:60px 6%;background:#fff;}
+    .amb-types h2{text-align:center;font-size:1.5rem;font-weight:700;margin-bottom:36px;}
+    .amb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;max-width:1100px;margin:0 auto;}
+    .amb-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s;}
+    .amb-card:hover{box-shadow:0 8px 24px rgba(0,0,0,0.1);transform:translateY(-3px);}
+    .amb-img{height:180px;display:flex;align-items:center;justify-content:center;font-size:5rem;background:#f8f9fa;}
+    .amb-body{padding:16px;}
+    .amb-body h4{font-size:0.95rem;font-weight:700;margin-bottom:6px;}
+    .amb-body p{font-size:0.8rem;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+    .btn-amb{width:100%;background:var(--red);color:#fff;padding:10px;border:none;border-radius:4px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'Poppins',sans-serif;letter-spacing:0.5px;transition:all 0.2s;}
+    .btn-amb:hover{background:#c0001a;}
+
+    /* ── WHY US ── */
+    .why-us{padding:60px 6%;background:#f8f9fa;}
+    .why-us h2{text-align:center;font-size:1.5rem;font-weight:700;margin-bottom:8px;}
+    .why-us .sub{text-align:center;color:var(--muted);font-size:0.88rem;max-width:700px;margin:0 auto 36px;line-height:1.6;}
+    .why-icons{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;}
+    .why-item{text-align:center;max-width:140px;}
+    .why-icon{width:60px;height:60px;border:2px solid var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px;}
+    .why-item span{font-size:0.8rem;color:#333;font-weight:500;}
+
+    /* ── TESTIMONIAL ── */
+    .testimonial{padding:60px 6%;background:#fff;}
+    .testimonial h2{text-align:center;font-size:1.5rem;font-weight:700;margin-bottom:36px;}
+    .test-wrap{display:flex;gap:30px;max-width:900px;margin:0 auto;align-items:stretch;}
+    .test-img{flex:1;border-radius:12px;overflow:hidden;background:#e8f4f8;display:flex;align-items:center;justify-content:center;font-size:5rem;min-height:280px;}
+    .test-content{flex:1;background:#1a1a2e;border-radius:12px;padding:32px;display:flex;flex-direction:column;justify-content:center;}
+    .test-content h3{color:#fff;font-size:1.3rem;font-weight:700;margin-bottom:16px;}
+    .test-content p{color:rgba(255,255,255,0.8);font-size:0.85rem;line-height:1.7;margin-bottom:16px;}
+    .test-author{color:rgba(255,255,255,0.6);font-size:0.8rem;font-style:italic;}
+    .test-dots{display:flex;gap:8px;margin-top:16px;}
+    .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);}
+    .dot.active{background:#fff;}
+
+    /* ── POPULAR STATS ── */
+    .pop-stats{padding:50px 6%;background:#fff;text-align:center;}
+    .pop-tag{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--red);font-size:0.85rem;font-weight:600;margin-bottom:20px;}
+    .pop-stats-box{border:1.5px solid var(--red);border-radius:12px;padding:28px 40px;display:inline-flex;gap:40px;flex-wrap:wrap;justify-content:center;}
+    .pop-stat .num{font-size:1.6rem;font-weight:800;color:var(--red);}
+    .pop-stat .lbl{font-size:0.75rem;color:var(--muted);}
+    .resp-time{color:var(--red);font-size:0.85rem;font-weight:600;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+    /* ── FOOTER ── */
+    footer{background:#111;padding:50px 6% 24px;color:rgba(255,255,255,0.7);}
+    .footer-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:30px;margin-bottom:40px;}
+    .footer-col h4{color:#fff;font-size:0.9rem;font-weight:700;margin-bottom:14px;}
+    .footer-col a{display:block;color:rgba(255,255,255,0.6);font-size:0.82rem;margin-bottom:8px;transition:color 0.2s;}
+    .footer-col a:hover{color:#fff;}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+    .footer-bottom p{font-size:0.78rem;}
+    .social-links{display:flex;gap:12px;}
+    .social-links a{color:rgba(255,255,255,0.6);font-size:0.85rem;transition:color 0.2s;}
+    .social-links a:hover{color:#fff;}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;}
+    .modal-box{background:#fff;border-radius:16px;padding:32px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.25);position:relative;}
+    .modal-box img{height:40px;display:block;margin:0 auto 18px;}
+    .modal-box h3{text-align:center;font-size:1.2rem;font-weight:700;margin-bottom:6px;}
+    .modal-sub{text-align:center;color:var(--muted);font-size:0.84rem;margin-bottom:22px;}
+    .form-group{margin-bottom:13px;}
+    .form-group label{display:block;font-size:0.8rem;font-weight:600;margin-bottom:4px;color:#333;}
+    .form-group input,.form-group select{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:0.88rem;font-family:'Poppins',sans-serif;color:#333;transition:border 0.2s;}
+    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(232,0,28,0.08);}
+    .btn-sms{width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:30px;font-weight:700;font-size:0.92rem;cursor:pointer;font-family:'Poppins',sans-serif;margin-top:4px;transition:all 0.2s;}
+    .btn-sms:hover{background:#c0001a;}
+    .modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;background:#f3f4f6;border:none;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+    .sms-alert{padding:9px 13px;border-radius:7px;font-size:0.83rem;margin-bottom:12px;display:none;}
+    .sms-alert.success{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;}
+    .sms-alert.error{background:#ffebee;color:#c62828;border:1px solid #ffcdd2;}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media(max-width:768px){
+      .hero{flex-direction:column;padding-top:88px;text-align:center;}
+      .hero-right{display:none;}
+      .hero h1{font-size:1.9rem;}
+      .nav-links{display:none;}
+      .test-wrap{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo">
+    <a href="/"><img src="images/rakshak-logo.png" alt="Rakशक"/></a>
+  </div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#ambulance">Ambulance Types</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-book-nav" onclick="goToBook()">BOOK NOW</button>
+    <button class="btn-login-nav" onclick="window.location.href='/login'">LOGIN</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-tag">In an emergency, call Rakशक!</div>
+    <h1>24/7 On-Demand Ambulance Service in Indore</h1>
+    <p>We provide Emergency Medical Service within 15 minutes or less. AI-powered dispatch ensures the nearest ambulance with available beds reaches you first.</p>
+    <div class="hero-btns">
+      <button class="btn-book-hero" onclick="goToBook()">BOOK NOW</button>
+      <div class="hero-or">or</div>
+      <div class="hero-call-label">Call Our Assistance</div>
+      <button class="btn-call-hero" onclick="openModal()">
+        📞 &nbsp;+91 86299 49772
+      </button>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-right-tag">Ambulance Service in Indore</div>
+    <div class="ambulance-illustration">
+      🚑
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <h2>Our Other medical services</h2>
+  <p>We at Rakशक provide our clients with a one-stop solution for all healthcare needs. We deliver an exclusive helpline number for ambulances and other healthcare services, ensuring 100% call answer assurance, 24×7, across Indore and surrounding areas.</p>
+  <div class="services-cards">
+    <div class="service-card">
+      <div class="s-icon">🎧</div>
+      <span>Consultant</span>
+    </div>
+    <div class="service-card">
+      <div class="s-icon">👩‍⚕️</div>
+      <span>Home Healthcare</span>
+    </div>
+    <div class="service-card">
+      <div class="s-icon">💊</div>
+      <span>E-Pharmacy</span>
+    </div>
+    <div class="service-card">
+      <div class="s-icon">🧪</div>
+      <span>Lab Test</span>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <h2>We are your first call in times of need</h2>
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-icon-wrap">🇮🇳</div>
+      <div class="stat-text">
+        <div class="num">Reached 5+</div>
+        <div class="lbl">cities</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon-wrap">⏱️</div>
+      <div class="stat-text">
+        <div class="num">Arrival within 15</div>
+        <div class="lbl">Minutes</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon-wrap">🚑</div>
+      <div class="stat-text">
+        <div class="num">10+ ambulances</div>
+        <div class="lbl">Indore region</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon-wrap">🧑</div>
+      <div class="stat-text">
+        <div class="num">500+</div>
+        <div class="lbl">lives saved</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AMBULANCE TYPES -->
+<section class="amb-types" id="ambulance">
+  <h2>Type of Ambulance</h2>
+  <div class="amb-grid">
+    <div class="amb-card">
+      <div class="amb-img">🚑</div>
+      <div class="amb-body">
+        <h4>Advanced Life Support (ALS)</h4>
+        <p>The one equipped with advanced equipment and tools to handle critically ill patients.</p>
+        <button class="btn-amb" onclick="goToBook()">BOOK NOW</button>
+      </div>
+    </div>
+    <div class="amb-card">
+      <div class="amb-img">🏥</div>
+      <div class="amb-body">
+        <h4>Basic Life Support (BLS)</h4>
+        <p>Ambulances includes the patient bed, pulse oximetry, and oxygen delivery devices.</p>
+        <button class="btn-amb" onclick="goToBook()">BOOK NOW</button>
+      </div>
+    </div>
+    <div class="amb-card">
+      <div class="amb-img">🚐</div>
+      <div class="amb-body">
+        <h4>Patient Transport Ambulances (PTA)</h4>
+        <p>Medical transport vehicle that transfers patients to and from hospitals.</p>
+        <button class="btn-amb" onclick="goToBook()">BOOK NOW</button>
+      </div>
+    </div>
+    <div class="amb-card">
+      <div class="amb-img">⚫</div>
+      <div class="amb-body">
+        <h4>Mortuary Van / Ambulance</h4>
+        <p>The ambulance is used for the transportation of the dead body from any place.</p>
+        <button class="btn-amb" onclick="goToBook()">BOOK NOW</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-us">
+  <h2>When seconds matter, choose the best ambulance service in Indore</h2>
+  <p class="sub">Rakशक is empowering communities with prompt attention and a response time of within 15 minutes. With AI-powered dispatch, Rakशक has established itself as one of the best ambulance services in Indore.</p>
+  <div class="why-icons">
+    <div class="why-item">
+      <div class="why-icon">📱</div>
+      <span>Simple and Fast Bookings</span>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">📅</div>
+      <span>Advance Booking Available</span>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">💰</div>
+      <span>Transparent Pricing</span>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">📞</div>
+      <span>Emergency Contact</span>
+    </div>
+    <div class="why-item">
+      <div class="why-icon">🩹</div>
+      <span>First Aid Guidance</span>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial">
+  <h2>Happy Customers</h2>
+  <div class="test-wrap">
+    <div class="test-img">👩‍⚕️</div>
+    <div class="test-content">
+      <h3>Happy Customers</h3>
+      <p>"One day, my daughter had a bad accident in our hometown Indore and I immediately called Rakशक. Their call executive consoled me and guided through the basics of first aid until the arrival of the ambulance in less than 15 minutes. The paramedics were well-prepared and professionally equipped."</p>
+      <div class="test-author">— Jyoti Pandey, Indore</div>
+      <div class="test-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POPULAR STATS -->
+<section class="pop-stats">
+  <div class="pop-tag">〰️ Popular Search 〰️</div>
+  <div class="pop-stats-box">
+    <div class="pop-stat">
+      <div class="num">500+</div>
+      <div class="lbl">Lives assisted</div>
+    </div>
+    <div class="pop-stat">
+      <div class="num">5+</div>
+      <div class="lbl">Cities in MP</div>
+    </div>
+    <div class="pop-stat">
+      <div class="num">10+</div>
+      <div class="lbl">Fleet Size</div>
+    </div>
+    <div class="pop-stat">
+      <div class="num">24/7</div>
+      <div class="lbl">Available</div>
+    </div>
+    <div class="pop-stat">
+      <div class="num">100%</div>
+      <div class="lbl">Call Answer</div>
+    </div>
+  </div>
+  <div class="resp-time">〰️ Response Time: <b>Less than 15 mins</b> 〰️</div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <img src="images/rakshak-logo.png" alt="Rakशक" style="height:38px;margin-bottom:14px;filter:brightness(0) invert(1)"/>
+      <p style="font-size:0.8rem;line-height:1.6">Protecting Lives with AI-powered emergency medical response in Indore, Madhya Pradesh.</p>
+    </div>
+    <div class="footer-col">
+      <h4>About</h4>
+      <a href="#about">What we do</a>
+      <a href="#">Journey</a>
+      <a href="#">Team</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">FAQs</a>
+    </div>
+    <div class="footer-col">
+      <h4>Services</h4>
+      <a href="#ambulance">ALS Ambulance</a>
+      <a href="#ambulance">BLS Ambulance</a>
+      <a href="#ambulance">Patient Transport</a>
+      <a href="#services">Home Healthcare</a>
+    </div>
+    <div class="footer-col">
+      <h4>Reach Us</h4>
+      <a href="#" onclick="openModal()">Contact Us</a>
+      <a href="#">Partner With Us</a>
+      <a href="/login">Login</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>Copyright © 2025 Rakशक. All rights reserved.</p>
+    <div class="social-links">
+      <a href="#">Facebook</a>
+      <a href="#">Twitter</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </div>
+</footer>
+
+<!-- CALL MODAL -->
+<div id="call-modal" style="display:none" class="modal-overlay" onclick="closeIfOutside(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <img src="images/rakshak-logo.png" alt="Rakशक"/>
+    <h3>📞 Call Our Assistance</h3>
+    <p class="modal-sub">Enter your number — we'll send the emergency booking link via SMS instantly</p>
+    <div id="sms-alert" class="sms-alert"></div>
+    <div class="form-group">
+      <label>Mobile Number *</label>
+      <input type="tel" id="phone" placeholder="10-digit mobile number" maxlength="10"/>
+    </div>
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="uname" placeholder="Your name"/>
+    </div>
+    <div class="form-group">
+      <label>Emergency Type</label>
+      <select id="etype">
+        <option value="">Select type...</option>
+        <option value="accident">🚗 Accident / Trauma</option>
+        <option value="cardiac">❤️ Heart Attack / Cardiac</option>
+        <option value="fracture">🦴 Fracture / Injury</option>
+        <option value="general">🏥 General Emergency</option>
+      </select>
+    </div>
+    <button class="btn-sms" id="sms-btn" onclick="sendSMS()">
+      📱 Send Booking Link via SMS
+    </button>
+    <p style="text-align:center;font-size:0.75rem;color:#9ca3af;margin-top:12px">
+      Or call directly: <a href="tel:+918882978888" style="color:var(--red);font-weight:700">+91 88829 78888</a>
+    </p>
+  </div>
+</div>
+
+<script>
+  function goToBook() { window.location.href = '/login'; }
+  function openModal() { document.getElementById('call-modal').style.display='flex'; document.body.style.overflow='hidden'; }
+  function closeModal() { document.getElementById('call-modal').style.display='none'; document.body.style.overflow=''; }
+  function closeIfOutside(e) { if(e.target.id==='call-modal') closeModal(); }
+
+  async function sendSMS() {
+    const phone = document.getElementById('phone').value.trim();
+    const name  = document.getElementById('uname').value.trim() || 'User';
+    const type  = document.getElementById('etype').value;
+    if (!phone || phone.length!==10 || !/^\d+$/.test(phone)) {
+      showAlert('Please enter a valid 10-digit mobile number','error'); return;
+    }
+    const btn = document.getElementById('sms-btn');
+    btn.innerHTML = '<span class="spinner"></span> Sending...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/sms/send-link',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({phone, name, emergencyType:type})
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert(`✅ SMS sent to ${phone}! Click the link to book your ambulance.`,'success');
+        setTimeout(closeModal, 3000);
+      } else {
+        showAlert(data.message||'Failed to send. Please call directly.','error');
+      }
+    } catch(e) {
+      showAlert('Server error. Please call directly.','error');
+    }
+    btn.innerHTML = '📱 Send Booking Link via SMS';
+    btn.disabled = false;
+  }
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('sms-alert');
+    el.textContent = msg;
+    el.className = `sms-alert ${type}`;
+    el.style.display = 'block';
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const t = document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+    });
+  });
+</script>
+</body>
+</html>

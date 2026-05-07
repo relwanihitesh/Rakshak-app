@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Rakशक — Driver</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    .call-admin-btn{background:#1565c0;color:#fff;padding:10px 20px;border:none;border-radius:30px;font-weight:700;font-size:0.88rem;font-family:'Poppins',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s;}
+    .call-admin-btn:hover{background:#0d47a1;}
+    .fare-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:linear-gradient(135deg,#fff5f5,#fff);border:1.5px solid var(--red);border-radius:20px;font-weight:700;color:var(--red);font-size:0.88rem;}
+    .loc-sharing{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#e8f5e9;border-radius:10px;font-size:0.82rem;color:#2e7d32;font-weight:500;}
+    .loc-dot{width:8px;height:8px;background:#2e7d32;border-radius:50%;animation:pulse 1.2s ease infinite;}
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="brand">
+    <img src="rakshak-logo. copy.png" alt="Rakशक" style="height:38px;object-fit:contain"/>
+  </div>
+  <div class="nav-right">
+    <button class="avail-toggle avail-on" id="avail-btn" onclick="toggleAvailability()">🟢 Available</button>
+    <div class="nav-user">
+      <div class="avatar" style="background:#00695c">D</div>
+      <span id="driver-name">Driver</span>
+    </div>
+    <a href="tel:+918882978888" class="call-admin-btn">📞 Call Admin</a>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div id="alert" class="alert" style="display:none"></div>
+
+  <!-- Stats -->
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="s-total">--</div><div class="stat-label">Total Cases</div></div>
+    <div class="stat-card orange"><div class="stat-icon">🚨</div><div class="stat-value" id="s-active">--</div><div class="stat-label">Active</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="s-done">--</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card blue"><div class="stat-icon">⭐</div><div class="stat-value" id="s-rating">--</div><div class="stat-label">Avg Rating</div></div>
+  </div>
+
+  <!-- Location sharing status -->
+  <div class="loc-sharing" id="loc-status" style="margin-bottom:16px">
+    <div class="loc-dot"></div>
+    <span id="loc-text">Location sharing — Click "Share Location" to start</span>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <!-- Active Case -->
+      <div id="active-case-section" style="display:none">
+        <div class="card" style="border:2px solid var(--success)">
+          <div class="card-header" style="color:var(--success)"><div class="header-icon" style="background:rgba(0,200,83,0.12)">🚨</div> Active Case</div>
+          <div id="active-case-content"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="header-icon">📋</div> My Assignments
+          <button class="btn btn-ghost btn-sm" onclick="loadAssignments()" style="margin-left:auto">↻</button>
+        </div>
+        <div id="assignments-list">
+          <div class="empty-state"><div class="empty-icon">🚑</div><p>No assignments yet</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="header-icon">📍</div> Navigation Map</div>
+        <div id="driver-map"></div>
+        <div id="route-info" class="route-info" style="display:none"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-info btn-sm" onclick="shareLocation()">📡 Share Location</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadAssignments()">↻ Refresh</button>
+          <a href="tel:+918882978888" class="call-admin-btn" style="font-size:0.8rem;padding:7px 14px">📞 Call Admin</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="header-icon">ℹ️</div> Driver Profile</div>
+        <div id="driver-info-box" style="font-size:0.88rem;line-height:2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+if (!requireAuth('driver')) {}
+const user = getUser();
+document.getElementById('driver-name').textContent = user.name;
+
+let driverMap, driverMarker, patientMarker, hospMarker, routeLine;
+let myLat = null, myLon = null, isAvailable = true;
+let locationInterval = null, currentEmergencyId = null;
+
+// Init map
+driverMap = L.map('driver-map').setView([22.7196, 75.8577], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(driverMap);
+
+// Auto-share location every 10 seconds when active
+function startLocationSharing() {
+  shareLocation();
+  locationInterval = setInterval(shareLocation, 10000);
+}
+function stopLocationSharing() {
+  if (locationInterval) clearInterval(locationInterval);
+}
+
+async function shareLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    myLat = pos.coords.latitude;
+    myLon = pos.coords.longitude;
+
+    // Update map
+    driverMap.setView([myLat, myLon], 14);
+    if (driverMarker) driverMap.removeLayer(driverMarker);
+    driverMarker = L.marker([myLat, myLon], {
+      icon: L.divIcon({ className:'', html:'<div style="background:#e8001c;color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(232,0,28,0.4)">🚑 You</div>', iconAnchor:[30,10] })
+    }).addTo(driverMap);
+
+    await apiCall('PUT', '/driver/location', { lat: myLat, lon: myLon, emergencyId: currentEmergencyId });
+    document.getElementById('loc-text').textContent = `📡 Live — ${myLat.toFixed(4)}, ${myLon.toFixed(4)}`;
+  }, () => {});
+}
+
+function toggleAvailability() {
+  isAvailable = !isAvailable;
+  const btn = document.getElementById('avail-btn');
+  btn.className = `avail-toggle ${isAvailable ? 'avail-on' : 'avail-off'}`;
+  btn.textContent = isAvailable ? '🟢 Available' : '🔴 Busy';
+}
+
+async function loadAssignments() {
+  const data = await apiCall('GET', '/driver/assignments');
+  if (!data.success) return;
+  const cases = data.emergencies;
+  const active = cases.filter(e => ['ASSIGNED','ACCEPTED','IN_TRANSIT'].includes(e.status));
+  document.getElementById('s-total').textContent = cases.length;
+  document.getElementById('s-active').textContent = active.length;
+  document.getElementById('s-done').textContent = cases.filter(e => e.status === 'COMPLETED').length;
+
+  // Load driver rating
+  const me = await apiCall('GET', '/auth/me');
+  if (me.success) document.getElementById('s-rating').textContent = me.user.avgRating || '5.0';
+
+  const current = cases.find(e => ['ASSIGNED','ACCEPTED','IN_TRANSIT'].includes(e.status));
+  if (current) {
+    currentEmergencyId = current._id;
+    document.getElementById('active-case-section').style.display = 'block';
+    renderActiveCase(current);
+    startLocationSharing();
+    if (current.location?.lat) showOnMap(current.location.lat, current.location.lon, current.assignedHospital?.location?.lat, current.assignedHospital?.location?.lon);
+  } else {
+    currentEmergencyId = null;
+    document.getElementById('active-case-section').style.display = 'none';
+    stopLocationSharing();
+  }
+
+  const container = document.getElementById('assignments-list');
+  if (!cases.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🚑</div><p>No assignments yet.<br>You will be notified when a case is assigned.</p></div>';
+    return;
+  }
+
+  container.innerHTML = cases.map(e => `
+    <div class="case-card ${e.status==='ASSIGNED'?'new-case':['ACCEPTED','IN_TRANSIT'].includes(e.status)?'active-case':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">${e.patientName} ${e.patientAge?`(${e.patientAge}yr, ${e.patientGender})`:''}</div>
+          <span class="${getBadgeClass(e.priorityLevel)}">${e.priorityLevel}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="${getStatusClass(e.status)}">${e.status}</span>
+          ${e.fare?.totalAmount ? `<span class="fare-chip">💰 ₹${e.fare.totalAmount}</span>` : ''}
+        </div>
+      </div>
+      <div class="info-row"><span class="info-icon">🩺</span><span>${e.disease} — ${e.condition}</span></div>
+      <div class="info-row"><span class="info-icon">📊</span><span>Severity: ${e.severityScale}/5</span></div>
+      ${e.patient?.phone ? `<div class="info-row"><span class="info-icon">📞</span><a href="tel:${e.patient.phone}" style="color:var(--info);font-weight:600">${e.patient.phone}</a></div>` : ''}
+      ${e.location ? `<div class="info-row"><span class="info-icon">📍</span><span>${e.location.address||`${e.location.lat?.toFixed(4)}, ${e.location.lon?.toFixed(4)}`}</span></div>` : ''}
+      ${e.assignedHospital ? `
+        <div style="margin-top:8px;padding:10px 12px;background:var(--light-gray);border-radius:10px">
+          <div class="info-row" style="margin:0"><span class="info-icon">🏥</span><b>${e.assignedHospital.name}</b></div>
+          <div class="info-row" style="margin:0"><span class="info-icon">📌</span><span style="font-size:0.8rem">${e.assignedHospital.address}</span></div>
+        </div>` : ''}
+      ${e.fare ? `
+        <div style="margin-top:8px;padding:10px 12px;background:#fff5f5;border-radius:10px;font-size:0.82rem">
+          <div style="display:flex;justify-content:space-between"><span>Ambulance: ${e.ambulanceType}</span><span>${e.fare.distanceKm} km</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-weight:700;color:var(--red)"><span>Total Fare</span><span>₹${e.fare.totalAmount}</span></div>
+        </div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${e.status==='ASSIGNED'?`<button class="btn btn-success btn-sm" onclick="acceptCase('${e._id}')">✅ Accept</button>`:''}
+        ${e.status==='ACCEPTED'?`<button class="btn btn-info btn-sm" onclick="markInTransit('${e._id}')">🚗 Picked Up Patient</button>`:''}
+        ${e.status==='IN_TRANSIT'?`<button class="btn btn-primary btn-sm" onclick="completeCase('${e._id}')">🏁 Arrived at Hospital</button>`:''}
+        ${['ASSIGNED','ACCEPTED','IN_TRANSIT'].includes(e.status)?`<button class="btn btn-info btn-sm" onclick="showOnMap(${e.location?.lat},${e.location?.lon},${e.assignedHospital?.location?.lat||'null'},${e.assignedHospital?.location?.lon||'null'})">🗺 Navigate</button>`:''}
+        <a href="tel:+918882978888" class="btn btn-ghost btn-sm">📞 Call Admin</a>
+      </div>
+    </div>`).join('');
+}
+
+function renderActiveCase(e) {
+  document.getElementById('active-case-content').innerHTML = `
+    <div class="info-row"><span class="info-icon">👤</span><b>${e.patientName}</b> ${e.patientAge?`(${e.patientAge}yr, ${e.patientGender})`:''} ${e.patient?.phone?`— <a href="tel:${e.patient.phone}" style="color:var(--info)">📞 ${e.patient.phone}</a>`:''}</div>
+    <div class="info-row"><span class="info-icon">🩺</span>${e.disease} — ${e.condition} <span class="${getBadgeClass(e.priorityLevel)}" style="margin-left:6px">${e.priorityLevel}</span></div>
+    <div class="info-row"><span class="info-icon">📊</span>Severity: ${e.severityScale}/5</div>
+    <div class="info-row"><span class="info-icon">📍</span>${e.location?.address||`${e.location?.lat?.toFixed(4)}, ${e.location?.lon?.toFixed(4)}`}</div>
+    ${e.assignedHospital?`<div class="info-row"><span class="info-icon">🏥</span><b>${e.assignedHospital.name}</b></div>`:''}
+    ${e.fare?`<div class="fare-chip" style="margin:8px 0">💰 Estimated Fare: ₹${e.fare.totalAmount} (${e.ambulanceType}, ${e.fare.distanceKm}km)</div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      ${e.status==='ASSIGNED'?`<button class="btn btn-success" onclick="acceptCase('${e._id}')">✅ Accept Case</button>`:''}
+      ${e.status==='ACCEPTED'?`<button class="btn btn-info" onclick="markInTransit('${e._id}')">🚗 Patient Picked Up</button>`:''}
+      ${e.status==='IN_TRANSIT'?`<button class="btn btn-primary" onclick="completeCase('${e._id}')">🏁 Arrived at Hospital</button>`:''}
+      <a href="tel:+918882978888" class="call-admin-btn">📞 Call Admin</a>
+    </div>`;
+}
+
+function showOnMap(patLat, patLon, hosLat, hosLon) {
+  if (!patLat || !patLon) return;
+  if (patientMarker) driverMap.removeLayer(patientMarker);
+  patientMarker = L.marker([patLat, patLon], {
+    icon: L.divIcon({ className:'', html:'<div style="background:#e8001c;color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600">🧑 Patient</div>', iconAnchor:[40,10] })
+  }).addTo(driverMap);
+  if (hosLat && hosLon) {
+    if (hospMarker) driverMap.removeLayer(hospMarker);
+    hospMarker = L.marker([hosLat, hosLon], {
+      icon: L.divIcon({ className:'', html:'<div style="background:#1565c0;color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600">🏥 Hospital</div>', iconAnchor:[45,10] })
+    }).addTo(driverMap);
+  }
+  if (routeLine) driverMap.removeLayer(routeLine);
+  const points = [[patLat, patLon]];
+  if (hosLat && hosLon) points.push([hosLat, hosLon]);
+  routeLine = L.polyline(points, { color:'#e8001c', weight:3, dashArray:'8,5' }).addTo(driverMap);
+  driverMap.fitBounds(routeLine.getBounds(), { padding:[40,40] });
+  const rd = document.getElementById('route-info');
+  rd.style.display = 'block';
+  rd.innerHTML = `📍 Patient: ${patLat.toFixed(4)}, ${patLon.toFixed(4)}${hosLat?`<br>🏥 Hospital: ${hosLat.toFixed(4)}, ${hosLon.toFixed(4)}`:''}`;
+}
+
+async function acceptCase(id) {
+  const data = await apiCall('PUT', `/driver/accept/${id}`);
+  if (!data.success) return showAlert('alert', data.message, 'error');
+  showAlert('alert', '✅ Case accepted! Patient notified.', 'success');
+  loadAssignments();
+}
+
+async function markInTransit(id) {
+  const data = await apiCall('PUT', `/driver/in-transit/${id}`);
+  if (!data.success) return showAlert('alert', data.message, 'error');
+  showAlert('alert', '🚗 Status updated — heading to hospital!', 'success');
+  loadAssignments();
+}
+
+async function completeCase(id) {
+  if (!confirm('Confirm patient delivered to hospital?')) return;
+  const data = await apiCall('PUT', `/driver/complete/${id}`);
+  if (!data.success) return showAlert('alert', data.message, 'error');
+  showAlert('alert', '🏁 Case completed! Great work 🎉', 'success');
+  stopLocationSharing();
+  currentEmergencyId = null;
+  isAvailable = true;
+  document.getElementById('avail-btn').className = 'avail-toggle avail-on';
+  document.getElementById('avail-btn').textContent = '🟢 Available';
+  if (data.fare) showAlert('alert', `💰 Final Fare: ₹${data.fare.totalAmount}`, 'success');
+  loadAssignments();
+}
+
+document.getElementById('driver-info-box').innerHTML = `
+  <div class="info-row"><span class="info-icon">👤</span><b>${user.name}</b></div>
+  <div class="info-row"><span class="info-icon">📧</span>${user.email}</div>
+  <div class="info-row"><span class="info-icon">🚑</span>Role: Driver</div>
+  <div style="margin-top:8px"><a href="tel:+918882978888" class="call-admin-btn">📞 Call Admin: +91 88829 78888</a></div>`;
+
+const socket = io();
+socket.emit('join_room', `driver_${user.id}`);
+socket.on('new_assignment', () => { showAlert('alert', '🚨 New emergency assigned!', 'error'); loadAssignments(); });
+socket.on('case_cancelled', () => { showAlert('alert', '⚠️ Case cancelled by patient', 'error'); stopLocationSharing(); loadAssignments(); });
+
+loadAssignments();
+shareLocation();
+</script>
+</body>
+</html>
