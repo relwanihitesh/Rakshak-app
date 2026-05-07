@@ -1,6 +1,8 @@
 # 🚑 RAKSHAK
 ## AI-Powered Smart Emergency Medical Response & Ambulance Dispatch System
 
+#### Live Demo Link rakshak-backend-x6e3.onrender.com
+
 ---
 
 ## 📁 Project Structure
@@ -190,3 +192,26 @@ PENDING → ASSIGNED → ACCEPTED → COMPLETED
 **Hitesh Relwani**
 Medicaps University, Indore, Madhya Pradesh
 Patent Application: RAKSHAK — FORM 2 (Patents Act, 1970)
+
+## 📸 Project Visuals (Screenshots)
+
+Aapka "Rakshak" app kaise kaam karta hai, uska visual overview yahan diya gaya hai:
+
+### 🏠 Home Page Overview
+User ko welcome karne aur system ke features dikhane ke liye ye main interface hai.
+<p align="center">
+  <img src="./screenshots/Home page 1.png" width="45%" alt="Home Page 1" />
+  <img src="./screenshots/Home page 2.png" width="45%" alt="Home Page 2" />
+</p>
+
+### 👨‍✈️ Admin Dashboard
+Ye wo central hub hai jahan se saari requests monitor hoti hain. Admin yahan se system ka control sambhalta hai.
+![Admin Page](./screenshots/Admin page.png)
+
+### 🚑 Driver Panel
+Ambulance drivers ke liye ye dashboard hai jahan unhe assign hui requests aur emergency locations dikhti hain.
+![Driver Page](./screenshots/drive page.png)
+
+### 📋 Patient Details & AI Priority
+Is page par patient ki saari information hoti hai aur AI priority score dikhta hai taaki critical cases pehle handle ho sakein.
+![Patient Page](./screenshots/patient page.png)
