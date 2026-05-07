@@ -198,8 +198,8 @@ Patent Application: RAKSHAK — FORM 2 (Patents Act, 1970)
 ### 🏠 Home Page & User Interface
 User ko welcome karne aur emergency details fill karne ke liye interface:
 <p align="center">
-  <img src="./screenshots/Home_page 1.png" width="45%" alt="Home Page 1" />
-  <img src="./screenshots/Home_page 2.png" width="45%" alt="Home Page 2" />
+  <img src="./screenshots/Home_page_1.png" width="45%" alt="Home Page 1" />
+  <img src="./screenshots/Home_page_2.png" width="45%" alt="Home Page 2" />
 </p>
 
 ### 👨‍✈️ Admin & Management
