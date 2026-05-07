@@ -47,19 +47,72 @@
   <div id="alert" class="alert" style="display:none"></div>
 
   <!-- OTP Verification Banner -->
-  <div id="otp-banner" class="otp-section" style="display:none">
-    <div style="font-weight:600;margin-bottom:8px">📱 Verify your phone number first</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <input type="tel" id="otp-phone" placeholder="10-digit mobile number" maxlength="10" style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"/>
-      <button class="btn btn-info btn-sm" onclick="sendOTP()">Send OTP</button>
-    </div>
-    <div id="otp-input-wrap" style="display:none;margin-top:8px;display:none">
-      <div style="display:flex;gap:8px">
-        <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" maxlength="6" style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"/>
-        <button class="btn btn-success btn-sm" onclick="verifyOTP()">Verify</button>
-      </div>
-    </div>
+<!-- OTP Verification Banner -->
+<div id="otp-banner" class="otp-section" style="display:none">
+
+  <div style="font-weight:600;margin-bottom:8px">
+    📱 Verify your phone number first
   </div>
+
+  <!-- Phone Input + Send OTP -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+
+    <input
+      type="tel"
+      id="otp-phone"
+      placeholder="10-digit mobile number"
+      maxlength="10"
+      style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"
+    />
+
+    <button
+      id="send-otp-btn"
+      class="btn btn-info btn-sm"
+      onclick="sendOTP()"
+    >
+      Send OTP
+    </button>
+
+  </div>
+
+  <!-- OTP Input -->
+  <div id="otp-input-wrap" style="display:none;margin-top:8px">
+
+    <div style="display:flex;gap:8px">
+
+      <input
+        type="text"
+        id="otp-code"
+        placeholder="Enter 6-digit OTP"
+        maxlength="6"
+        style="flex:1;padding:9px 12px;border:1.5px solid #90caf9;border-radius:8px;font-family:'Poppins',sans-serif;font-size:0.88rem"
+      />
+
+      <button
+        id="verify-otp-btn"
+        class="btn btn-success btn-sm"
+        onclick="verifyOTP()"
+      >
+        Verify
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- OTP Hint -->
+  <div
+    id="dev-otp-hint"
+    style="display:none;margin-top:10px;padding:10px;border-radius:8px;background:#fff3cd;color:#856404;font-weight:600"
+  ></div>
+
+  <!-- Verify Status -->
+  <div
+    id="verify-status"
+    style="margin-top:10px;font-size:0.85rem;font-weight:600"
+  ></div>
+
+</div>
 
   <div class="two-col">
     <!-- LEFT: Form -->
@@ -324,18 +377,21 @@ function updateBilling() {
 async function sendOTP() {
   const phone = document.getElementById('otp-phone').value.trim();
   if (!phone || phone.length !== 10 || !/^\d+$/.test(phone)) {
-    return showAlert('alert', 'Enter valid 10-digit mobile number', 'error');
+    showAlert('alert', 'Please enter a valid 10-digit mobile number', 'error');
+    return;
   }
+
   const btn = document.getElementById('send-otp-btn');
   btn.textContent = 'Sending...';
   btn.disabled = true;
 
   try {
+    const token = localStorage.getItem('rakshak_token');
     const res = await fetch('/api/auth/send-otp', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('rakshak_token')
+        'Authorization': 'Bearer ' + token
       },
       body: JSON.stringify({ phone })
     });
@@ -346,58 +402,103 @@ async function sendOTP() {
     btn.disabled = false;
 
     if (!data.success) {
-      return showAlert('alert', data.message, 'error');
+      showAlert('alert', data.message || 'Failed to send OTP', 'error');
+      return;
     }
 
-    document.getElementById('otp-input-row').style.display = 'block';
-    showAlert('alert', data.message || 'OTP sent!', 'success');
+    // Show OTP input row
+    const inputWrap = document.getElementById('otp-input-wrap');
+    if (inputWrap) {
+      inputWrap.style.display = 'block';
+      inputWrap.style.removeProperty('display'); // remove inline display:none
+      inputWrap.style.display = 'flex';
+    }
 
+    // Show OTP on screen if devOtp returned
     if (data.devOtp) {
-      document.getElementById('dev-otp-hint').textContent = '👆 Your OTP: ' + data.devOtp;
-      document.getElementById('dev-otp-hint').style.color = '#e8001c';
-      document.getElementById('dev-otp-hint').style.fontWeight = '700';
-      document.getElementById('dev-otp-hint').style.fontSize = '1rem';
+      // Auto fill OTP input
+      const otpCode = document.getElementById('otp-code');
+      if (otpCode) otpCode.value = data.devOtp;
+
+      // Show hint
+      const hint = document.getElementById('dev-otp-hint');
+      if (hint) {
+        hint.textContent = '👆 Your OTP: ' + data.devOtp;
+        hint.style.color = '#e8001c';
+        hint.style.fontWeight = '700';
+        hint.style.fontSize = '1rem';
+        hint.style.display = 'block';
+      }
+
+      showAlert('alert', '✅ OTP: ' + data.devOtp + ' (auto-filled)', 'success');
+    } else {
+      showAlert('alert', '✅ OTP sent to ' + phone + ' via SMS', 'success');
     }
-  } catch (err) {
+  } catch(err) {
     btn.textContent = 'Resend OTP';
     btn.disabled = false;
+    console.error('OTP Error:', err);
     showAlert('alert', 'Network error: ' + err.message, 'error');
   }
 }
 
+// ── PURANI verifyOTP function dhundo (line ~369 ke paas) ──
+// Yeh poori function replace karo:
+
 async function verifyOTP() {
-  const otp = document.getElementById('otp-input').value.trim();
+  const otp = document.getElementById('otp-code').value.trim();
   if (!otp || otp.length !== 6) {
-    return showAlert('alert', 'Enter 6-digit OTP', 'error');
+    showAlert('alert', 'Please enter 6-digit OTP', 'error');
+    return;
   }
 
+  const btn = document.getElementById('verify-otp-btn') ||
+              document.querySelector('[onclick="verifyOTP()"]');
+  if (btn) { btn.textContent = 'Verifying...'; btn.disabled = true; }
+
   try {
+    const token = localStorage.getItem('rakshak_token');
     const res = await fetch('/api/auth/verify-otp', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + localStorage.getItem('rakshak_token')
+        'Authorization': 'Bearer ' + token
       },
       body: JSON.stringify({ otp })
     });
     const data = await res.json();
     console.log('verify-otp response:', data);
 
+    if (btn) { btn.textContent = 'Verify'; btn.disabled = false; }
+
     if (!data.success) {
-      return showAlert('alert', data.message, 'error');
+      showAlert('alert', data.message || 'Invalid OTP', 'error');
+      return;
     }
 
-    showAlert('alert', '✅ Phone verified!', 'success');
+    // SUCCESS!
     document.getElementById('otp-banner').style.display = 'none';
-    document.getElementById('verify-status').className = 'verify-badge verified';
-    document.getElementById('verify-status').textContent = '✅ Phone Verified';
-    const u = getUser();
+
+    const vs = document.getElementById('verify-status');
+    if (vs) {
+      vs.className = 'verify-badge verified';
+      vs.textContent = '✅ Phone Verified';
+    }
+
+    // Update localStorage
+    const u = JSON.parse(localStorage.getItem('rakshak_user') || '{}');
     u.phoneVerified = true;
+    u.isPhoneVerified = true;
     localStorage.setItem('rakshak_user', JSON.stringify(u));
-  } catch (err) {
+
+    showAlert('alert', '✅ Phone verified successfully!', 'success');
+  } catch(err) {
+    if (btn) { btn.textContent = 'Verify'; btn.disabled = false; }
+    console.error('Verify Error:', err);
     showAlert('alert', 'Network error: ' + err.message, 'error');
   }
 }
+
 
 // ── Check Verification on page load ──
 async function checkVerification() {
