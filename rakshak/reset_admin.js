@@ -4,10 +4,11 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
+const connectMongo = require('./backend/config/mongo');
 
 async function resetAdmin() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await connectMongo();
     console.log('Connected to MongoDB...');
 
     const users = mongoose.connection.collection('users');
