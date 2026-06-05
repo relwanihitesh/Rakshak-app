@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-// Is line ko badlein (yeh batayega ki .env file ek folder bahar rakhi hai)
-require('dotenv').config({ path: '../.env' });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const connectMongo = require('./config/mongo');
 
 const User     = require('./models/User');
 const Hospital = require('./models/Hospital');
 
 const seed = async () => {
   console.log('Connecting to:', process.env.MONGO_URI);
-  await mongoose.connect(process.env.MONGO_URI);
+  await connectMongo();
   console.log('Connected to MongoDB...');
 
   // Only clear hospitals and re-seed

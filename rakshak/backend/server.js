@@ -1,10 +1,10 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 require('dotenv').config();
+const connectMongo = require('./config/mongo');
 
 const app = express();
 const server = http.createServer(app);
@@ -52,12 +52,23 @@ io.on('connection', (socket) => {
   });
 });
 
+const PORT = process.env.PORT || 5000;
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${PORT} is already in use. Stop the other process or set PORT to a free port.`);
+    process.exit(1);
+  }
+  console.error('❌ Server error:', err);
+  process.exit(1);
+});
+
 // MongoDB Connection
-mongoose.connect(process.env.MONGO_URI)
+connectMongo()
   .then(() => {
     console.log('✅ MongoDB Connected');
-    server.listen(process.env.PORT, () => {
-      console.log(`🚑 Rakshak Server running on http://localhost:${process.env.PORT}`);
+    server.listen(PORT, () => {
+      console.log(`🚑 Rakshak Server running on http://localhost:${PORT}`);
     });
   })
   .catch(err => {
