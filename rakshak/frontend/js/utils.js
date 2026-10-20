@@ -1,5 +1,5 @@
 // ── Rakshak Shared Utilities ──
-const API = 'http://localhost:5000/api';
+const API = 'https://rakshak-backend-x6e3.onrender.com/api';
 
 const getToken  = ()       => localStorage.getItem('rakshak_token');
 const getUser   = ()       => JSON.parse(localStorage.getItem('rakshak_user') || 'null');
